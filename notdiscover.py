@@ -123,7 +123,7 @@ def main():
 
     print(f"Scanning network: {ip_range}")
     devices_list = scan(ip_range, interface, args.passive, args.timeout, verbose=args.verbose)
-    display_result(devices_list, args.no_colors, args.verbose)
+    # display_result(devices_list, args.no_colors, args.verbose)
 
 if __name__ == "__main__":
     main()
