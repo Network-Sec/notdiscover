@@ -23,9 +23,9 @@ $ python3 .\notdiscover.py -l
 Available Interfaces:
 Source   Index  Name                                         MAC                    IPv4             IPv6
 libpcap  1      Software Loopback Interface 1                00:00:00:00:00:00      127.0.0.1        ::1
-libpcap  11     Bluetooth Device (Personal Area Network) #2  8c:23:2b:23:23:23     123.223.123.23
+libpcap  11     Bluetooth Device (Personal Area Network) #2  8c:23:2b:23:23:23      123.223.123.23
 libpcap  14     WAN Miniport (Network Monitor)
-libpcap  17     VirtualBox Host-Only Ethernet Adapter        23:00:23:00:00:23     123.123.23.1
+libpcap  17     VirtualBox Host-Only Ethernet Adapter        23:00:23:00:00:23      123.123.23.1
 libpcap  21     WAN Miniport (IPv6)
 libpcap  27     Intel(R) Ethernet Controller (3) 2323-V      ASUSTekCOMPU:23:4b:23  169.223.23.123
 libpcap  4      Realtek USB GbE Family Controller            RealtekSemic:23:23:23  123.223.123.123
