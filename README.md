@@ -34,3 +34,6 @@ libpcap  63     WireGuard Tunnel                                                
 libpcap  7      Intel(R) Ethernet Controller (3) 2323-V #2   ASUSTekCOMPU:03:4b:26  192.123.23.2
 libpcap  9      WAN Miniport (IP)
 ``` 
+
+## Dev
+- Little speed & realtime output update by chunking larger ranges
