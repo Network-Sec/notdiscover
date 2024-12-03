@@ -1,4 +1,5 @@
 from scapy.all import *
+import ipaddress
 import argparse
 import sys
 
@@ -46,21 +47,31 @@ def get_ip_range(interface_name):
         sys.exit(1)
 
 # Perform an ARP scan
-def scan(ip_range, interface_name, passive=False, timeout=0.1, count=2, verbose=False, no_colors=False):
+from scapy.all import ARP, Ether, srp, conf
+import ipaddress
+import sys
+
+def scan(ip_range, interface_name, passive=False, timeout=0.5, chunk_size=256, verbose=False, no_colors=False):
     if passive:
         print("Passive mode is not implemented yet.")
         sys.exit(1)
-    
+
     # Set the interface for Scapy to use
     conf.iface = interface_name
-    
-    arp_request = ARP(pdst=ip_range)
-    broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
-    arp_request_broadcast = broadcast / arp_request
-    answered, unanswered = srp(arp_request_broadcast, timeout=timeout, verbose=False)
-    
+
+    try:
+        # Generate all IP addresses in the range
+        all_ips = [str(ip) for ip in ipaddress.IPv4Network(ip_range, strict=False)]
+    except ValueError as e:
+        print(f"Error parsing IP range: {e}")
+        return []
+
+    # Split IP range into manageable chunks
+    ip_chunks = [all_ips[i:i + chunk_size] for i in range(0, len(all_ips), chunk_size)]
+
     devices_list = []
 
+    # Print header
     if no_colors:
         print("IP Address\t\tMAC Address")
         print("-----------------------------------------")
@@ -68,13 +79,26 @@ def scan(ip_range, interface_name, passive=False, timeout=0.1, count=2, verbose=
         print("\033[1;32mIP Address\033[0m\t\t\033[1;34mMAC Address\033[0m")
         print("-----------------------------------------")
 
-    for sent, received in answered:
-        if no_colors:
-            print(f"{received.psrc}\t\t{received.hwsrc}")
-        else:
-            print(f"\033[1;32m{received.psrc}\033[0m\t\t\033[1;34m{received.hwsrc}\033[0m")
-        devices_list.append({'ip': received.psrc, 'mac': received.hwsrc})
-    
+    # Process each chunk
+    for chunk in ip_chunks:
+        if verbose:
+            print(f"Scanning chunk: {chunk[0]} - {chunk[-1]}")
+
+        # Create ARP request for this chunk
+        arp_request = ARP(pdst=chunk)
+        broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+        arp_request_broadcast = broadcast / arp_request
+
+        # Send ARP request and capture responses
+        answered, unanswered = srp(arp_request_broadcast, timeout=timeout, verbose=verbose)
+
+        for sent, received in answered:
+            if no_colors:
+                print(f"{received.psrc}\t\t{received.hwsrc}")
+            else:
+                print(f"\033[1;32m{received.psrc}\033[0m\t\t\033[1;34m{received.hwsrc}\033[0m")
+            devices_list.append({'ip': received.psrc, 'mac': received.hwsrc})
+
     return devices_list
 
 # Display results in a formatted table
@@ -101,7 +125,7 @@ def main():
     parser.add_argument('-i', '--interface', type=str, help="Network interface to use (e.g., Ethernet, wlan0)")
     parser.add_argument('-r', '--range', type=str, help="IP range to scan (e.g., 192.168.1.0/24)")
     parser.add_argument('-p', '--passive', action='store_true', help="Run in passive mode (only listen for responses)")
-    parser.add_argument('-t', '--timeout', type=int, default=1, help="Timeout for each ARP request (default: 1s)")
+    parser.add_argument('-t', '--timeout', type=int, default=0.5, help="Timeout for each ARP request (default: 1s)")
     parser.add_argument('-v', '--verbose', action='store_true', help="Show verbose output")
     parser.add_argument('-c', '--count', type=int, default=5, help="Number of IPs to probe before declaring it alive (default: 5)")
     parser.add_argument('-n', '--no-colors', action='store_true', help="Disable colored output")
@@ -123,7 +147,7 @@ def main():
 
     print(f"Scanning network: {ip_range}")
     devices_list = scan(ip_range, interface, args.passive, args.timeout, verbose=args.verbose)
-    # display_result(devices_list, args.no_colors, args.verbose)
+    #display_result(devices_list, args.no_colors, args.verbose)
 
 if __name__ == "__main__":
     main()
